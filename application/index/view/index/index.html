@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>fefe</title>
+    <!-- <link rel="stylesheet" href=""> -->
+</head>
+<body>
+    this is test ! welcome {$name}
+    <?php echo time();?>
+    {$username|default="heige"}
+    <form action="{:url('index/upload')}" enctype="multipart/form-data" method="post">
+        <input type="file" name="image" /> <br>
+        <input type="submit" value="上传" />
+    </form>
+    <div><img src="{:captcha_src()}" alt="captcha" /></div>
+</body>
+</html>
