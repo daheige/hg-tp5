@@ -1,0 +1,11 @@
+*.log
+runtime/
+runtime/*
+thinkphp/
+thinkphp/*
+vendor/
+vendor/*
+LICENSE.txt
+composer.lock
+public/uploads/
+public/uploads/*
