@@ -157,7 +157,7 @@ server {
 ```
 ├── application
 │   ├── common
-│   ├── config
+│   ├── config  配置文件目录
 │   ├── extend
 │   └── index
 ├── build.php
@@ -172,7 +172,7 @@ server {
 │   ├── static
 │   └── uploads
 ├── README.md
-├── runtime
+├── runtime  权限755
 │   ├── log
 │   └── temp
 ├── think
