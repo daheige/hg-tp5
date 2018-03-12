@@ -153,6 +153,50 @@ server {
         access_log /var/log/nginx/logs/mytp-access.log;
 }
 ```
+### 项目模块化设计和目录调整如下：(请根据实际情况调整）
+```
+├── application
+│   ├── common
+│   ├── config
+│   ├── extend
+│   └── index
+├── build.php
+├── composer.json
+├── composer.lock
+├── LICENSE.txt
+├── public
+│   ├── favicon.ico
+│   ├── index.php
+│   ├── robots.txt
+│   ├── router.php
+│   ├── static
+│   └── uploads
+├── README.md
+├── runtime
+│   ├── log
+│   └── temp
+├── think
+├── thinkphp
+│   ├── base.php
+│   ├── codecov.yml
+│   ├── composer.json
+│   ├── console.php
+│   ├── CONTRIBUTING.md
+│   ├── convention.php
+│   ├── helper.php
+│   ├── lang
+│   ├── library
+│   ├── LICENSE.txt
+│   ├── logo.png
+│   ├── phpunit.xml
+│   ├── README.md
+│   ├── start.php
+│   └── tpl
+└── vendor
+    ├── autoload.php
+    ├── composer
+    └── topthink
+```
 ## 参与开发
 请参阅 [ThinkPHP5 核心框架包](https://github.com/top-think/framework)。
 
