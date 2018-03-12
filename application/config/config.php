@@ -15,9 +15,9 @@ return [
     // +----------------------------------------------------------------------
 
     // 应用调试模式
-    'app_debug'              => false,
-    // 应用Trace
-    'app_trace'              => false,
+    'app_debug'              => APP_DEBUG,
+    // 应用Trace 测试或开发环境开启
+    'app_trace'              => APP_DEBUG ? true : false,
     // 应用模式状态
     'app_status'             => '',
     // 是否支持多模块
@@ -26,10 +26,10 @@ return [
     'auto_bind_module'       => false,
     // 注册的根命名空间
     'root_namespace'         => [
-        // 'my' => EXTEND_PATH . '/My/',
+        // 'my' => EXTEND_PATH . '/my/',
     ],
     // 扩展函数文件 额外拓展helper函数
-    'extra_file_list'        => [THINK_PATH . 'helper' . EXT, APP_PATH . 'common/helper' . EXT],
+    'extra_file_list'        => [THINK_PATH . 'helper' . EXT, COMMON_PATH . 'helper' . EXT],
     // 默认输出类型
     'default_return_type'    => 'html',
     // 默认AJAX 数据返回格式,可选json xml ...
@@ -155,9 +155,9 @@ return [
 
     // 错误显示信息,非调试模式有效
     'error_message'          => '页面错误！请稍后再试～',
-    // 显示错误信息
-    'show_error_msg'         => false,
-    // 异常处理handle类 留空使用 \think\exception\Handle
+                                                          // 显示错误信息
+    'show_error_msg'         => APP_DEBUG ? true : false, //测试环境下开启调试模式
+                                                          // 异常处理handle类 留空使用 \think\exception\Handle
     'exception_handle'       => '',
 
     // +----------------------------------------------------------------------
@@ -178,7 +178,15 @@ return [
     // +----------------------------------------------------------------------
     'trace'                  => [
         // 内置Html Console 支持扩展
-        'type' => 'Html',
+        'type'       => 'Html',
+        'trace_tabs' => [
+            'base'         => '基本',
+            'file'         => '文件',
+            'info'         => '流程',
+            'error|notice' => '错误',
+            'sql'          => 'SQL',
+            'debug|log'    => '调试',
+        ],
     ],
 
     // +----------------------------------------------------------------------
@@ -227,7 +235,7 @@ return [
         //  cookie 启用安全传输
         'secure'    => false,
         // httponly设置
-        'httponly'  => '',
+        'httponly'  => true,
         // 是否使用 setcookie
         'setcookie' => true,
     ],

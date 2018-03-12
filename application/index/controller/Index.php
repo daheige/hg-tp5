@@ -52,4 +52,39 @@ class Index extends Controller
         die;
         hgtest();
     }
+
+    /**
+     * [json json数据输出]
+     * @return [string] [json]
+     */
+    public function json()
+    {
+        return json(['code' => 200, 'message' => '获取成功', 'data' => ['username' => 'heige313', 'git' => 'daheige']]);
+    }
+
+    public function xml()
+    {
+        $data = ['name' => 'thinkphp', 'url' => 'thinkphp.cn'];
+        // 指定xml数据输出
+        return xml(['data' => $data, 'code' => 1, 'message' => '操作完成']);
+    }
+
+    public function getUser()
+    {
+        //数据返回格式：对象方式返回
+        $res = model('User')->getUserInfo();
+        var_dump($res->name);
+        $res = model('User')->getUser();
+        var_dump($res->name);
+
+        $res = model('User')::get(1);
+        var_dump($res->name);
+
+        //调用model内部会使用单例模式和做new User操作，先在独立模块下查找User模型
+        //然后公共common/model查找模型
+        $user = model('User');
+        $res  = $user->where('name', 'heige')
+            ->find();
+        var_dump($res->name);
+    }
 }
