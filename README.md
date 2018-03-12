@@ -110,6 +110,47 @@ www  WEB部署目录（或者子目录）
 
 ### 数据表和字段
 *   数据表和字段采用小写加下划线方式命名，并注意字段名不要以下划线开头，例如 `think_user` 表和 `user_name`字段，不建议使用驼峰和中文作为数据表字段命名。
+### nginx配置
+server {
+        listen 80;
+        index index.php index.html index.htm;
+        root /web/tp5/public;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm default.html;
+        server_name mytp.com *.mytp.com;
+
+        location / {
+            if (!-e $request_filename) {
+                rewrite  ^(.*)$  /index.php?s=/$1  last;
+                break;
+            }
+        }
+
+        # pass  FastCGI server listening on 127.0.0.1:9000
+        location ~ \.php$ {
+                fastcgi_pass 127.0.0.1:9000;
+                fastcgi_index index.php;
+                include fastcgi_params;
+
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                fastcgi_param SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param PATH_INFO          $fastcgi_path_info;
+                fastcgi_param PATH_TRANSLATED    $document_root$fastcgi_path_info;
+                fastcgi_param APP_ENV "TESTING";#TESTING;PRODUCTION;STAGING
+        }
+
+        location ~ /\.ht {
+                deny all;
+        }
+
+        location ~ .*\.(xml|gif|jpg|jpeg|png|bmp|swf|woff|woff2|ttf|js|css)$ {
+                expires 30d;
+        }
+
+        error_log /var/log/nginx/logs/mytp-error.log;
+        access_log /var/log/nginx/logs/mytp-access.log;
+}
 
 ## 参与开发
 请参阅 [ThinkPHP5 核心框架包](https://github.com/top-think/framework)。
