@@ -70,6 +70,99 @@ if (!function_exists('service')) {
 }
 
 if (!function_exists('write_log')) {
+    /**
+     * [get_config 动态读取配置文件内容]
+     * // var_dump(get_config('redis.game'));
+     * // var_dump(get_config('redis.game.server'));
+     * // var_dump(get_config('redis.game.server'));
+     * @param  [type] $name         [redis.game 支持redis.game.server 最多二级读取]
+     * @param  [type] $value        [默认值，如配置文件中没有配置值，可以自定义值]
+     * @return [type] [配置内容 array or string]
+     */
+    function get_config($name, $value = null)
+    {
+        static $info = [];
+        $name_hash   = md5($name);
+        if (array_key_exists($name_hash, $info)) {
+            return $info[$name_hash];
+        }
+
+        if (strpos($name, '.') !== false) {
+            $arr = explode('.', $name);
+            //优先从环境目录读取,最后从Conf目录下读取
+            $filename = CONF_PATH . (IS_PRO ? '/production/' : '/testing/') . $arr[0] . '.php';
+            if (!is_file($filename)) {
+                $filename = CONF_PATH . '/' . $arr[0] . '.php';
+                if (!is_file($filename)) {
+                    $info[$name_hash] = $value;
+                    return $info[$name_hash];
+                }
+            }
+
+            //缓存文件内容，防止反复导入
+            $filename_hash = md5($filename);
+            if (!isset($info[$filename_hash])) {
+                $info[$filename_hash] = include_once $filename;
+            }
+            $config = $info[$filename_hash];
+
+            if (count($arr) == 2) {
+                $info[$name_hash] = array_key_exists($arr[1], $config) ? $config[$arr[1]] : $value;
+                return $info[$name_hash];
+            }
+
+            if (count($arr) == 3) {
+                $secondArr        = array_key_exists($arr[1], $config) ? $config[$arr[1]] : [];
+                $info[$name_hash] = array_key_exists($arr[2], $secondArr) ? $secondArr[$arr[2]] : $value;
+                return $info[$name_hash];
+            }
+
+            $info[$name_hash] = null;
+            return $info[$name_hash];
+        }
+
+        //读取整个文件内容
+        //优先从环境目录读取,最后从Conf目录下读取
+        $filename = CONF_PATH . (IS_PRO ? '/production/' : '/testing/') . $name . '.php';
+        if (!is_file($filename)) {
+            $filename = CONF_PATH . '/' . $name . '.php';
+            if (!is_file($filename)) {
+                $info[$name_hash] = $value;
+                return $info[$name_hash];
+            }
+        }
+
+        //缓存文件内容，防止反复导入
+        $filename_hash = md5($filename);
+        if (!isset($info[$filename_hash])) {
+            $info[$filename_hash] = include_once $filename;
+        }
+
+        $info[$name_hash] = $info[$filename_hash];
+        return $info[$name_hash];
+    }
+}
+
+if (!function_exists('redis')) {
+    /**
+     * [redis 公共函数]
+     * @param  string $config                  [redis.php中的redis配置名称]
+     * @return [type] [redis的一个实例]
+     */
+    function redis($config = 'default')
+    {
+        //app目录
+        $config = strtolower($config);
+        $config = get_config('redis.' . $config);
+        if (!$config) {
+            return false;
+        }
+
+        return \Library\RedisHandler::getInstance($config);
+    }
+}
+
+if (!function_exists('write_log')) {
 
     function write_log($message = '', $file_name = "common", $method = "info")
     {

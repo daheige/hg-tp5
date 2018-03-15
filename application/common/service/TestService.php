@@ -1,5 +1,5 @@
 <?php
-namespace Service;
+namespace service;
 
 class TestService extends BaseService
 {

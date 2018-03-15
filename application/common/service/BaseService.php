@@ -1,6 +1,6 @@
 <?php
 
-namespace Service;
+namespace service;
 
 use \library\ConcurrenceCurl;
 use \library\Slog as Log;
