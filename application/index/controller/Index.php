@@ -87,4 +87,13 @@ class Index extends Controller
             ->find();
         var_dump($res->name);
     }
+
+    public function hginfo()
+    {
+        \library\Slog::info('fefe', __FUNCTION__);
+        //助手函数调用
+        write_log('heige313', __FUNCTION__);
+
+        echo logic("Test")->getUser();
+    }
 }
