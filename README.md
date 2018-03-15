@@ -1,4 +1,5 @@
-ThinkPHP 5.0使用demo
+<strong style="font-size:16px;">写在最开始的说明：该框架基于thinkphp5.0.15构建而成，新增了logic和service两个层，同时新增了curl并发库以及redis处理类，可用于构建大型web,api应用的开发。</strong>
+<br/>ThinkPHP 5.0使用demo
 ===============
 
 [![Total Downloads](https://poser.pugx.org/topthink/think/downloads)](https://packagist.org/packages/topthink/think)
