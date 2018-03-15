@@ -69,7 +69,7 @@ if (!function_exists('service')) {
     }
 }
 
-if (!function_exists('write_log')) {
+if (!function_exists('get_config')) {
     /**
      * [get_config 动态读取配置文件内容]
      * // var_dump(get_config('redis.game'));
