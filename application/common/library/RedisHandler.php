@@ -37,6 +37,20 @@ class RedisHandler
                 $this->redis->auth($conf['password']);
             }
             $this->redis->ping();
+            
+            //设置redis key前缀
+            if (isset($conf['prefix']) && $conf['prefix']) {
+                $this->redis->setOption(\Redis::OPT_PREFIX, $prefix); // use custom prefix on all keys
+            }
+
+            //设置redis database哪个库,默认最大不超过16个库,默认采用第0个库
+            if (isset($conf['database']) && is_numeric($conf['database'])) {
+                if ($conf['database'] > 15) {
+                    $conf['database'] = 0;
+                }
+
+                $this->redis->select($conf['database']);
+            }
 
         } catch (\Exception $e) {
             throw new \Exception('RedisHandle_redis_connect 3 ' . $e->getMessage(), 1);
