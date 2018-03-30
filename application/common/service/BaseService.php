@@ -97,36 +97,27 @@ class BaseService
         return $this->errorCode;
     }
 
+    //原样返回响应结果不加处理
     public function getInterfaceData($epi_curl_manager)
     {
         $response = $epi_curl_manager->getResponse();
+        //测试环境下记录请求的原始结果
+        if (defined('APP_DEBUG') && APP_DEBUG) {
+            Log::info('api result:' . var_export($response['data'], true), 'api_request_full_res');
+        }
+
         if ($response === null || (isset($response['code']) && $response['code'] == 500)) {
             $this->setErrorInfo(10002, '网络异常，获取信息失败');
             return false;
         }
 
         if ($response['code'] == 200) {
-            $response_data = json_decode($response['data'], true);
-            $code          = isset($response_data['code']) ? $response_data['code'] : 500;
-            $msg           = isset($response_data['message']) ? $response_data['message'] : '获取信息失败';
-            if (isset($response_data['code'])) {
-                if ($response_data['code'] == 500) {
-                    $this->setErrorInfo($code, $msg);
-                    return false;
-                } elseif ($response_data['code'] === 0 || $response_data['code'] === 200) {
-                    // 记录慢查询接口
-                    if ($response['time'] > 0.2) {
-                        // 记录慢查询接口
-                        Log::notice('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
-                    }
-                    return isset($response_data['data']) ? $response_data['data'] : '';
-                }
-            } else {
-                // 记录接口返回错误数据
-                $this->setErrorInfo($code, $msg);
-                Log::warn('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
-                return false;
+            //记录慢查询api
+            if ($response['time'] > 2) {
+                Log::notice('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
             }
+
+            return isset($response['data']) ? $response['data'] : '';
         }
 
         // 记录接口请求错误
@@ -144,13 +135,31 @@ class BaseService
             return false;
         }
 
-        if ($response['code'] == 200) { //响应状态
-            $response_data = json_decode($response['data'], true);
-            if (!empty($response_data) && is_array($response_data)) {
-                return $response_data;
+        //httpok 200
+        if ($response['code'] == 200) {
+            $response_data = json_decode($response['data'], true); //业务方返回的数据
+            $code          = isset($response_data['code']) ? $response_data['code'] : 500;
+            $msg           = isset($response_data['message']) ? $response_data['message'] : '获取信息失败';
+
+            //业务方包含code,message,data
+            //约定code = 0表示正常请求
+            if (isset($response_data['code'])) {
+                if ($response_data['code'] == 500) {
+                    $this->setErrorInfo($code, $msg);
+                    return false;
+                } elseif ($response_data['code'] === 0 || $response_data['code'] === 200) {
+                    // 记录慢查询接口
+                    if ($response['time'] > 2) {
+                        // 记录慢查询接口
+                        Log::notice('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
+                    }
+
+                    //如果包含data,就返回data，否则原样返回响应结果
+                    return isset($response_data['data']) ? $response_data['data'] : $response_data;
+                }
             } else {
                 // 记录接口返回错误数据
-                $this->setErrorInfo(10002, '请求失败');
+                $this->setErrorInfo($code, $msg);
                 Log::warn('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
                 return false;
             }
@@ -160,5 +169,53 @@ class BaseService
         Log::error('CURL REQUEST ERROR : HTTP_CODE=' . $response['code'] . '; TOTAL_TIME=' . $response['time'] . '; EFFECTIVE_URL=' . $response['url'] . '; Data :' . $response['data'], 'service');
         $this->setErrorInfo($response['code'], '获取信息失败');
         return false;
+    }
+
+    /**
+     * [curlPost get curl请求]
+     * 当is_format_json=true,返回结果code,message,data,否则原样返回
+     * 第三个参数$options可以携带header头或cookie进行请求
+     * @param  string  $url            [请求地址]
+     * @param  array   $params         [请求参数]
+     * @param  array   $options        [header头附加信息]
+     * @param  boolean $is_format_json [是否解析json数据提交]
+     * @return [array  or string]
+     */
+    public function curlPost($url = '', $params = [], $is_format_json = false, $options = [])
+    {
+        $curl_obj = $this->post($url, $params, $options);
+        $result   = $this->getInterfaceData($curl_obj);
+        $result   = $is_format_json ? json_decode($result, true) : $result;
+        if ($is_format_json && empty($result)) {
+            return ['code' => 500, 'message' => '获取信息失败', 'data' => null];
+        }
+
+        return $result ? $result : null;
+    }
+
+    /**
+     * [curlPost post curl请求]
+     * 当is_format_json=true,返回结果code,message,data,否则原样返回
+     * 参数$options可以携带header头或cookie进行请求
+     * @param  string  $url            [请求地址]
+     * @param  array   $params         [请求参数]
+     * @param  array   $options        [header头附加信息]
+     * @param  boolean $is_format_json [是否解析json数据提交]
+     * @return [array  or string]
+     */
+    public function curlGet($url = '', $params = [], $is_format_json = false, $options = [])
+    {
+        if (is_array($params) && $params) {
+            $url = strpos($url, '?') !== false ? $url . '&' . http_build_query($params) : $url . '?' . http_build_query($params);
+        }
+
+        $curl_obj = $this->get($url, $options);
+        $result   = $this->getInterfaceData($curl_obj);
+        $result   = $is_format_json ? json_decode($result, true) : $result;
+        if ($is_format_json && empty($result)) {
+            return ['code' => 500, 'message' => '获取信息失败', 'data' => null];
+        }
+
+        return $result ? $result : null;
     }
 }
