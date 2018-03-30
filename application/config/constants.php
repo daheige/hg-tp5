@@ -13,10 +13,10 @@ define('THINK_PATH', ROOT_PATH . 'thinkphp/');
 define('APP_ENV', isset($_SERVER['APP_ENV']) ? strtolower($_SERVER['APP_ENV']) : 'production');
 
 //是否是生产环境
-defined('IS_PRO') or define('IS_PRO', APP_ENV == 'production' || is_file('/etc/php.env.md'));
+defined('IS_PRO') or define('IS_PRO', APP_ENV == 'production' || is_file('/etc/php.env.production'));
 
 //测试或本地环境打开调试模式，线上环境关闭
-define('APP_DEBUG', in_array(APP_ENV, ['testing', 'local']));
+define('APP_DEBUG', !IS_PRO || in_array(APP_ENV, ['testing', 'local']));
 
 //用于不同环境读取不同的config
 define('SYS_CONFIG_PATH', in_array(APP_ENV, ['tesing', 'local']) ? CONF_PATH . APP_ENV . '/' : CONF_PATH . 'production/');
