@@ -29,6 +29,11 @@
     "extra": {
         "think-path": "thinkphp"
     },
+    "scripts": {
+        "post-update-cmd": [
+            "composer dump-autoload --optimize"
+        ]
+    },
     "config": {
         "preferred-install": "dist"
     }
