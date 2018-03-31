@@ -3,7 +3,8 @@ namespace library;
 
 /**
  * 日志处理类
- * @author heige <zhuwei313@hotmail.com>
+ * author: heige
+ * time: 2018-01-09 23:29
  */
 class Slog
 {
@@ -116,6 +117,7 @@ class Slog
         $arr[] = 'errMessage: ' . $errstr;
         self::info(implode(PHP_EOL, $arr), 'common_error');
     }
+
     //获取 fatal error register_shutdown_function("Log::fatalHandler");
     public static function fatalHandler()
     {

@@ -5,7 +5,7 @@ namespace library;
  * redis操作类
  * author:heige
  * git:daheige
- * time:2016-02-17
+ * time:2017-12-22
  */
 class RedisHandler
 {
@@ -14,25 +14,24 @@ class RedisHandler
      */
     private $redis;
     private static $_instance = [];
-    protected static $config  = null;
     private function __construct($config = [])
     {
 
         if ($config == 'REDIS_DEFAULT') {
             $conf = [
-                'server' => '127.0.0.1',
-                'port'   => 6379,
+                'host' => '127.0.0.1',
+                'port' => 6379,
             ];
         } else {
             $conf = is_array($config) && !empty($config) ? $config : [
-                'server' => '127.0.0.1',
-                'port'   => 6379,
+                'host' => '127.0.0.1',
+                'port' => 6379,
             ];
         }
 
         $this->redis = new \Redis();
         try {
-            $this->redis->connect($conf['server'], $conf['port']);
+            $this->redis->connect($conf['host'], $conf['port']);
             if (isset($conf['password']) && $conf['password']) {
                 $this->redis->auth($conf['password']);
             }
@@ -52,9 +51,26 @@ class RedisHandler
                 $this->redis->select($conf['database']);
             }
 
+            //设置redis key前缀
+            if (isset($conf['prefix']) && $conf['prefix']) {
+                $this->redis->setOption(\Redis::OPT_PREFIX, $prefix); // use custom prefix on all keys
+            }
+
+            //设置redis database哪个库,默认最大不超过16个库,默认采用第0个库
+            if (isset($conf['database']) && is_numeric($conf['database'])) {
+                if ($conf['database'] > 15) {
+                    $conf['database'] = 0;
+                }
+
+                $this->redis->select($conf['database']);
+            }
+
         } catch (\Exception $e) {
-            throw new \Exception('RedisHandle_redis_connect 3 ' . $e->getMessage(), 1);
+            // throw new \Exception('RedisHandle_redis_connect 3 ' . $e->getMessage(), 1);
+            write_log('RedisHandle_redis_connect 3 ' . $e->getMessage(), 'redis_error', 'info');
+            return false;
         }
+
         return $this->redis;
     }
 
@@ -65,19 +81,16 @@ class RedisHandler
      *  'port'   => '6379' 端口号
      * )
      * @param  string        $config
-     * @param  force         $force    是否强制连接
      * @return RedisHandle
      */
-    public static function getInstance($config = 'REDIS_DEFAULT', $force = false)
+    public static function getInstance($config = 'REDIS_DEFAULT')
     {
-        $conn_id      = md5(var_export($config, true)); //redis连接唯一标识
-        self::$config = $config;
-        if (!isset(self::$_instance[$conn_id]) || !(self::$_instance[$conn_id] instanceof self) || $force) {
+        $conn_id = md5(var_export($config, true)); //redis连接唯一标识
+        if (!isset(self::$_instance[$conn_id]) || !(self::$_instance[$conn_id] instanceof self)) {
             self::$_instance[$conn_id] = new self($config);
         }
         return self::$_instance[$conn_id];
     }
-
     /**
      * 设置值(string)会将$value自动转为json格式
      * @param  string       $key     KEY名称
@@ -90,7 +103,7 @@ class RedisHandler
         $value  = json_encode($value, JSON_UNESCAPED_UNICODE);
         $retRes = $this->redis->set($key, $value);
         if ($timeOut > 0) {
-            $this->redis->EXPIRE($key, $timeOut); //过期时间设置
+            $this->redis->EXPIRE($key, $timeOut);
         }
         return $retRes;
     }
@@ -153,6 +166,7 @@ class RedisHandler
         return true;
         //return $this->redis->flushAll();
     }
+
     /**
      * 数据入队列(对应redis的list数据结构)
      * @param  string       $key   KEY名称
@@ -189,11 +203,6 @@ class RedisHandler
      */
     public function __call($name, $params)
     {
-        try {
-            return call_user_func_array([$this->redis, $name], $params);
-        } catch (\Exception $e) {
-            self::getInstance(self::$config, true); //断开重连
-            return call_user_func_array([$this->redis, $name], $params);
-        }
+        return call_user_func_array([$this->redis, $name], $params);
     }
 }
