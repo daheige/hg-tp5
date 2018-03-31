@@ -27,7 +27,7 @@ define('SYS_VERSION', '1.0.0');
 
 // 生产环境
 defined('IS_PRO') or define('IS_PRO', APP_ENV == 'production' || is_file('/etc/php.env.production'));
-defined('PRODUCTION', IS_PRO);
+defined('PRODUCTION') or define('PRODUCTION', IS_PRO);
 
 // 预发环境
 defined('STAGING') || define('STAGING', is_file('/etc/php.env.staging'));
