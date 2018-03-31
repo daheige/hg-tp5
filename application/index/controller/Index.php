@@ -96,4 +96,11 @@ class Index extends Controller
 
         echo logic("Test")->getUser();
     }
+
+    public function hgservice()
+    {
+        //服务demo
+        service('Test')->getUser('http://www.baidu.com/api/info?id=1');
+        echo 3;die;
+    }
 }

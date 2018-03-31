@@ -46,13 +46,30 @@ if (!function_exists('logic')) {
     }
 }
 
+/**
+ * 将当前环境转换为字符串
+ */
+function env_str()
+{
+    switch (true) {
+        case PRODUCTION:
+            return 'production';
+        case STAGING:
+            return 'staging';
+        case TESTING:
+            return 'testing';
+        default:
+            return 'local';
+    }
+}
+
 if (!function_exists('service')) {
     /**
      * 创建logic
      * @author heige
      *
-     * @param  string    $name logic名称
-     * @return B\Logic
+     * @param  string      $name logic名称
+     * @return B\service
      */
     function service($name, $group = 'common')
     {
@@ -71,13 +88,12 @@ if (!function_exists('service')) {
 
 if (!function_exists('get_config')) {
     /**
-     * [get_config 动态读取配置文件内容]
-     * // var_dump(get_config('redis.game'));
-     * // var_dump(get_config('redis.game.server'));
-     * // var_dump(get_config('redis.game.server'));
-     * @param  [type] $name         [redis.game 支持redis.game.server 最多二级读取]
-     * @param  [type] $value        [默认值，如配置文件中没有配置值，可以自定义值]
-     * @return [type] [配置内容 array or string]
+     * 加载配置文件数据
+     *     get_config('database')
+     *     get_config('database.default.adapter')
+     *
+     * @param  string  $name
+     * @return mixed
      */
     function get_config($name, $value = null)
     {
@@ -86,11 +102,10 @@ if (!function_exists('get_config')) {
         if (array_key_exists($name_hash, $info)) {
             return $info[$name_hash];
         }
-
         if (strpos($name, '.') !== false) {
             $arr = explode('.', $name);
             //优先从环境目录读取,最后从Conf目录下读取
-            $filename = CONF_PATH . (IS_PRO ? '/production/' : '/testing/') . $arr[0] . '.php';
+            $filename = CONF_PATH . env_str() . '/' . $arr[0] . '.php';
             if (!is_file($filename)) {
                 $filename = CONF_PATH . '/' . $arr[0] . '.php';
                 if (!is_file($filename)) {
@@ -98,32 +113,29 @@ if (!function_exists('get_config')) {
                     return $info[$name_hash];
                 }
             }
-
             //缓存文件内容，防止反复导入
             $filename_hash = md5($filename);
             if (!isset($info[$filename_hash])) {
-                $info[$filename_hash] = include_once $filename;
+                $info[$filename_hash] = include $filename;
             }
-            $config = $info[$filename_hash];
 
+            $config = $info[$filename_hash];
             if (count($arr) == 2) {
                 $info[$name_hash] = array_key_exists($arr[1], $config) ? $config[$arr[1]] : $value;
                 return $info[$name_hash];
             }
-
             if (count($arr) == 3) {
                 $secondArr        = array_key_exists($arr[1], $config) ? $config[$arr[1]] : [];
                 $info[$name_hash] = array_key_exists($arr[2], $secondArr) ? $secondArr[$arr[2]] : $value;
                 return $info[$name_hash];
             }
-
             $info[$name_hash] = null;
             return $info[$name_hash];
         }
 
         //读取整个文件内容
         //优先从环境目录读取,最后从Conf目录下读取
-        $filename = CONF_PATH . (IS_PRO ? '/production/' : '/testing/') . $name . '.php';
+        $filename = CONF_PATH . env_str() . '/' . $name . '.php';
         if (!is_file($filename)) {
             $filename = CONF_PATH . '/' . $name . '.php';
             if (!is_file($filename)) {
@@ -131,11 +143,10 @@ if (!function_exists('get_config')) {
                 return $info[$name_hash];
             }
         }
-
         //缓存文件内容，防止反复导入
         $filename_hash = md5($filename);
         if (!isset($info[$filename_hash])) {
-            $info[$filename_hash] = include_once $filename;
+            $info[$filename_hash] = include $filename;
         }
 
         $info[$name_hash] = $info[$filename_hash];

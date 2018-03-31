@@ -12,4 +12,11 @@ class TestService extends BaseService
         return $result ? $result : null;
     }
 
+    public function getUser($url, $params = [])
+    {
+        $curl_obj = $this->get($url, $params);
+        $result   = $this->getData($curl_obj);
+        var_dump($result);die;
+    }
+
 }
