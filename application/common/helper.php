@@ -105,9 +105,9 @@ if (!function_exists('get_config')) {
         if (strpos($name, '.') !== false) {
             $arr = explode('.', $name);
             //优先从环境目录读取,最后从Conf目录下读取
-            $filename = CONF_PATH . '/' . env_str() . '/' . $arr[0] . '.php';
+            $filename = CONF_PATH . env_str() . '/' . $arr[0] . '.php';
             if (!is_file($filename)) {
-                $filename = CONF_PATH . '/' . $arr[0] . '.php';
+                $filename = CONF_PATH . $arr[0] . '.php';
                 if (!is_file($filename)) {
                     $info[$name_hash] = $value;
                     return $info[$name_hash];
@@ -135,9 +135,9 @@ if (!function_exists('get_config')) {
 
         //读取整个文件内容
         //优先从环境目录读取,最后从Conf目录下读取
-        $filename = CONF_PATH . '/' . env_str() . '/' . $name . '.php';
+        $filename = CONF_PATH . env_str() . '/' . $name . '.php';
         if (!is_file($filename)) {
-            $filename = CONF_PATH . '/' . $name . '.php';
+            $filename = CONF_PATH . $name . '.php';
             if (!is_file($filename)) {
                 $info[$name_hash] = $value;
                 return $info[$name_hash];
